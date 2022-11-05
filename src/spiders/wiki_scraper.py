@@ -2,12 +2,12 @@ import scrapy
 import time
 import re
 class OperasScraper(scrapy.Spider):
-    name = "wiki"
-    
+    name = "wiki_operas"
+
     # loop over the years by adding 10 years every time and wiki will get us all the years avai in this decade
     def start_requests(self):
-        decade = 1950
-        while decade <= 1960:
+        decade = 1700
+        while decade <= 1710:
             urls = [
                 f"https://en.wikipedia.org/wiki/Category:{decade}s_operas",
                 ] 
@@ -29,6 +29,7 @@ class OperasScraper(scrapy.Spider):
             else:
                 year = None                
             next_year = domain + next_year
+            # decade = response.meta.get("decade")
             yield scrapy.Request(next_year, callback=self.year_parser,meta={"year":year})
 
     # years parser
@@ -43,6 +44,7 @@ class OperasScraper(scrapy.Spider):
     def opera_content_parser(self, response):
         name = response.xpath("//h1/i/text()").get()
         year = response.meta.get("year")
+        era = "".join(year[:2])
         # made_by = response.xpath("//table[@class='infobox vevent']//a/text()").getall()
         made_by =  response.xpath("//td[@class='infobox-subheader']//text()").getall()
         le = len(made_by)
@@ -64,8 +66,9 @@ class OperasScraper(scrapy.Spider):
             "premiere_date": date,
             "premiere_place": place,
             "Language" : response.xpath("//table[@class='infobox vevent']//*[text()[contains(.,'Language')]]/following-sibling::td/text()").get(),
-            "year" : year,
+            "era" : f"{era}th",
             "librettist": librettist,
+            "year": year, 
             "summary": summary 
         }
 
