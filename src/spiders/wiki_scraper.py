@@ -4,6 +4,7 @@ import re
 class OperasScraper(scrapy.Spider):
     name = "wiki"
     
+    # loop over the years by adding 10 years every time and wiki will get us all the years avai in this decade
     def start_requests(self):
         decade = 1950
         while decade <= 1960:
@@ -15,7 +16,8 @@ class OperasScraper(scrapy.Spider):
                 time.sleep(4)
                 print(decade)
             decade += 10
-
+    
+    # decades parser
     def de_parser(self, response):
         list_years = response.xpath("//div[@class='mw-category-group']//a/@href").getall()
         domain = "https://en.wikipedia.org/"
@@ -29,7 +31,7 @@ class OperasScraper(scrapy.Spider):
             next_year = domain + next_year
             yield scrapy.Request(next_year, callback=self.year_parser,meta={"year":year})
 
-
+    # years parser
     def year_parser(self, response):
         operas = response.xpath("//div[@class='mw-category-group']//@href").getall()
         year = response.meta.get("year")
@@ -37,7 +39,7 @@ class OperasScraper(scrapy.Spider):
             opera_link = response.urljoin(opera)
             yield scrapy.Request(opera_link, callback=self.opera_content_parser, meta={"year":year})
 
-
+    # page-content-parser
     def opera_content_parser(self, response):
         name = response.xpath("//h1/i/text()").get()
         year = response.meta.get("year")
